@@ -1,0 +1,210 @@
+SEQUENCE startup
+SET Total floor = 10
+SET Total column = 1
+SET total elevator = 2
+SET defaultfloor RC = 1
+SET Maxweightlimit = 2500
+SET Maxload = 3000
+SET numbersofcallbutton = 2 by floor 
+SET elevatorstatus TO idle
+SET elevatorfloor TO RC
+SET elevatordoor TO close
+SEQUENCE startup
+
+
+
+SEQUENCE callElevator USING  direction AND currentfloor
+    CALL externalbutton WITH direction AND currentfloor RETURNING externalButtonStatus
+    CALL  findbestelevator WITH direction AND currentFloor RETURNING bestelevator
+    CALL requestelevator WITH bestelevator AND  requestedfloor RETURNING organizedFloorlist
+    CALL movelevator WITH bestelevator AND direction AND organizedFloorlist 
+ END SEQUENCE
+
+
+ SEQUENCE callInelevator USING currentfloor AND requestedfloor
+    CALL internalbutton WITH currentfloor AND requestedFloor RETURNING internalButtonStatus
+    CALL requestelevator WITH bestelevator and requestedFloor RETURNING organizedFloorList
+    CALL moveElevator with bestelevator AND direction AND organizedFloorList
+END SEQUENCE
+ 
+ SEQUENCE externalbutton USING direction AND currentfloor
+FOR EACH button in externalButtons
+        IF currentFloor = buttonFloor AND direction = buttondirection THEN
+            SET externalButtonStatus innactive
+            RETURN externalButtonStatus
+        ELSE IF currentFloor != buttonFloor 
+            SET externalButtonStatus active 
+            RETURN externalButtonStatus
+        ELSE IF buttondirection != direction 
+            SET externalButtonStatus active
+            RETURN externalButtonStatus
+        END IF   
+    END FOR  
+ END SEQUENCE
+
+ SEQUENCE internalButton (requestedFloor)
+    FOR EACH button in internalButtons
+        IF currentFloor = requestedFloor THEN
+            SET internalButtonStatus innactive
+            RETURN internalButtonStatus
+        ELSE IF currentFloor != requestedFloor 
+            SET internalButtonStatus active 
+            RETURN internalButtonStatus
+        END IF   
+    END FOR  
+END SEQUENCE
+
+
+
+ 
+
+ SEQUENCE floorchoice 
+   IF floorchoice is higher than currentFloor THEN 
+      CALL elevatorUp
+       IF floorchoice is lower than currentFloor THEN
+          CALL elevatorDown
+END SEQUENCE
+
+
+
+SEQUENCE elevatorUp USING bestelevator AND requestedFloor
+   CALL opencloseDoor
+    SET status TO moving
+        COMPUTE elevatorFloor = elevatorFloor + 1 
+        UNTIL elevatorFloor = requestedFloor
+    SET status TO stopped
+    CALL opencloseDoor with bestelevator
+END SEQUENCE   
+
+
+
+SEQUENCE elevatorDown USING bestelevator AND requestedFloor
+    CALL opencloseDoor
+    SET status TO moving
+        COMPUTE elevatorFloor = elevatorFloor - 1 
+        UNTIL elevatorFloor = requestedFloor
+    SET status TO stopped
+    CALL opencloseDoor with bestelevator
+END SEQUENCE
+
+
+
+SEQUENCE requestelevator USING elevator AND requestedfloor
+    ADD requestedfloor TO floorList
+        CALL organizefloorList with floorlist and direction RETURNING organizedfloorList
+        SET floorlist TO organizedfloorlist
+END SEQUENCE
+
+
+SEQUENCE organizefloorList USING floorlist AND direction
+    IF direction is up THEN
+        COMPUTE floorList by ascending
+        RETURN organizedFloorList
+    ELSE IF direction is down THEN
+        COMPUTE floorList by descending
+        RETURN organizedfloorlist
+    END IF        
+END SEQUENCE
+
+
+
+ SEQUENCE findbestelevator USING direction and currentfloor
+    FOR EACH elevator in elevators
+
+     WHILE elevator is not found
+        FOR EACH elevator in elevatorlist 
+            IF status is idle and currentFloor = elevatorFloor THEN
+                RETURN bestelevator
+                END IF
+         END FOR EACH
+                    FOR EACH elevator in elevatorlist
+                         ELSE IF status elevatorUp AND currentFloor > elevatorFloor and direction is going up THEN
+                             RETURN bestelevator
+                             END IF
+                            END FOR EACH
+                                    FOR EACH elevator in elevatorlist
+                                 ELSE IF status is elevatorDown AND currentFloor < elevatorFloor and direction is going down THEN
+                                     RETURN bestelevator
+                                     END IF
+                                END FOR EACH
+                                FOR EACH elevator in elevatorlist
+                                    ELSE IF status is idle AND currentFloor != elevatorFloor THEN             
+                                     RETURN bestelevator
+                                     END IF
+                                    END FOR EACH     
+            END IF
+        END FOR
+    END WHILE
+END SEQUENCE
+
+
+
+SEQUENCE movelevator USING floorchoice AND bestelevator
+    WHILE organizedFloorList has at least 1 floor
+        READ requestedFloor FROM organizedFloorList
+            IF elevatorFloor = requestedFloor THEN
+                CALL opencloseDoor WITH bestElevator
+            ELSE IF elevatorFloor < requestedFloor THEN
+                CALL elevatorUp WITH bestElevator AND requestedFloor
+            ELSE IF elevatorFloor > requestedFloor THEN
+                CALL elevatorDown WITH bestElevator AND requestedFloor
+            END IF
+    END WHILE      
+END SEQUENCE
+
+
+SEQUENCE opencloseDoor USING bestElevator
+         IF bestElevator is stopped THEN
+            Open door WITH elevatortimer THEN
+            Close door
+        ELSE IF door = blocked THEN
+            REPEAT UNTIL door != blocked
+        END IF
+END SEQUENCE
+
+
+
+SEQUENCE elevatortimer
+ SET timer TO 7 seconds
+    END SEQUENCE
+
+
+ SEQUENCE restmode 
+ IF callElevator AND callInelevator AND requestelevator is not active THEN
+  CALL movelevator TO send elevators TO RC
+  END IF
+ END SEQUENCE 
+
+
+
+ SEQUENCE overweight USING weightsensor AND columns
+  FOR EACH elevator in columns
+    SET maximumweight TO 1600 lbs THEN
+    READ weightsensor THEN
+      IF weightsensor value >= 1600 lbs THEN
+        SET overweightlight TO ON THEN
+        CALL opencloseDoor
+      ELSE IF weight_sensor value < 1600 lbs
+        SET overweightlight TO OFF
+      END IF
+  END FOR
+END SEQUENCE
+
+
+
+    
+
+            
+
+
+
+
+ 
+ 
+ 
+
+
+
+ 
+ 
+

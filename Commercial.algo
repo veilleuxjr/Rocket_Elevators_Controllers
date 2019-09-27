@@ -1,0 +1,258 @@
+
+SEQUENCE startup
+    SET batterystatus TO operational
+    SET column1 to floors RC AND -6 <= RC
+    SET column1 elevators to 3
+    SET column2 to floors RC AND 17 TO 33
+    SET column2 elevators to 3
+    SET column3 to floors RC AND 34 TO 50
+    SET column3 elevators to 3
+    SET column4 to floors RC AND 51 TO 66        
+    SET column3 elevators to 3
+    SET columns to column1, column2, column3, column4
+    SET elevatorsfloor TO RC
+    SET elevatorsstatus TO IDLE
+    SET elevatorsdoors TO CLOSE
+END SEQUENCE startup
+
+
+
+
+SEQUENCE operatebattery                   'SEQUENCE THAT CONTROL OVERALL THE ELEVATOR'
+  WHILE battery status operational
+  FOR EACH column in columns
+    FOR EACH elevator in column elevators
+      WHILE elevator floorlist is not EMPTY
+         READ nextfloor FROM floorlist
+          IF nextfloor = elevatorfloor THEN
+            CALL openclosedoors 
+          ELSE IF nextfloor < elevatorfloor
+            CALL movingstatus THEN
+            CALL elevatorDown THEN
+            CALL stoppedstatus THEN
+            CALL openclosedoors THEN
+            CALL buttonlightOFF
+          ELSE IF nextfloor > elevatorfloor
+            CALL movingstatus THEN
+            CALL elevatorUp THEN
+            CALL stoppedstatus THEN
+            CALL openclosedoors THEN
+            CALL buttonlightOFF
+          ELSE IF elevator floorlist is EMPTY
+            CALL returnorigin
+
+          END IF
+
+      END WHILE
+    END FOR
+        END FOR
+  END WHILE
+END SEQUENCE
+
+
+
+SEQUENCE callelevators USING requestfloor AND callbutton AND floor      'THIS SEQUENCE CALLS ELEVATOR'
+    CALL mainPanelFloor WITH requestfloor RETURNING column THEN
+    CALL buttonlightON WITH direction AND floor
+    CALL bestelevator WITH column AND requestfloor  RETURNING elevator THEN
+    CALL addfloortolist WITH elevator AND requestfloor 
+    CALL showdisplayRC WITH requestfloor THEN
+    CALL showdisplaycage WITH requestfloor
+END SEQUENCE
+
+
+
+SEQUENCE mainpanelfloor USING requestfloor 'THIS CODE CHOOSES WHICH COLUMN GOES AT WHICH FLOOR'
+    FOR EACH column in battery columns
+
+        IF requestfloor -6 <= RC THEN
+            SET column1 TO column
+                RETURN column
+
+        ELSE IF requestfloor > RC AND <= 33 THEN
+            SET column2 TO column
+                RETURN column
+
+        ELSE IF requestfloor > 33 AND <= 50 THEN
+            SET column3 TO column
+                RETURN column
+
+        ELSE IF requestfloor > 50 AND <= 66 THEN
+            SET column4 TO column
+                RETURN column
+   END FOR
+END SEQUENCE
+
+
+
+SEQUENCE addfloortolist USING elevator AND requestFloor  'FLOOR LIST'
+
+  ADD requestfloor to elevator floorlist
+
+END SEQUENCE
+
+
+
+SEQUENCE findbestelevator USING column and requestfloor 'WICH ELEVATOR IS THE BEST TO FIND'
+FOR EACH elevator in column
+
+    IF elevatofloor is RC AND idlestatus THEN     
+      RETURN bestelevator
+        END IF
+END FOR EACH
+FOR EACH elevator in elevatorlist
+    ELSE IF status elevatorUp AND currentFloor > elevatorfloor and direction is going up THEN
+     RETURN bestelevator
+     END IF
+ END FOR EACH
+     FOR EACH elevator in elevatorlist
+     ELSE IF status is elevatorDown AND currentFloor < elevatorfloor and direction is going down THEN
+     RETURN bestelevator
+        END IF
+     END FOR EACH
+     FOR EACH elevator in elevatorlist
+      ELSE IF status is idle AND currentFloor != elevatorFloor THEN             
+      RETURN bestelevator
+     END IF
+     END FOR EACH     
+    ELSE IF elevator = movingstatus THEN
+     CALL sendrequest with elevatorfloor AND status THEN
+    END IF
+
+END SEQUENCE
+
+
+
+SEQUENCE sendrequest USING elevatorfloor AND column AND status AND floorlist 'THIS SEQUENCE SENDS A REQUEST TO ELEVATOR THAT IT PUTS IN ITS FLOORLIST'
+    FOR EACH callbutton IN column
+        IF callbutton < elevatorfloor AND movingstatus THEN
+            ADD callbutton to floorlist 
+            COMPUTE floorlist by descending
+        ELSE IF callbutton > elevatorfloor AND movingstatus THEN
+            ADD callbutton to floorlist 
+            COMPUTE floorlist by descending
+        END IF
+        RETURN floorlist
+    END FOR
+END SEQUENCE
+
+
+
+SEQUENCE opencloseDoor USING bestelevator               'THE SEQUENCE THAT CONTROL THE DOORS'
+         IF bestElevator is stopped THEN
+            Open door WITH elevatortimer THEN
+            Close door
+        ELSE IF door = blocked THEN
+            REPEAT UNTIL door != blocked
+        END IF
+END SEQUENCE
+
+
+
+SEQUENCE elevatortimer
+ SET timer TO 7 seconds
+    END SEQUENCE
+
+
+
+SEQUENCE findcallbutton USING direction AND floor AND column
+  FOR EACH callbutton IN column callbuttons
+    IF direction = callbutton direction AND floor = callbutton floor THEN
+      RETURN callbutton
+    END IF
+  END FOR
+
+END SEQUENCE
+
+
+
+SEQUENCE buttonlightON USING direction AND floor
+  CALL findcallbutton WITH direction AND floor RETURNING callbutton
+    SET buttonlight TO ON
+END SEQUENCE
+
+
+
+SEQUENCE buttonlightOFF USING direction AND floor
+  CALL findcallbutton WITH direction AND floor RETURNING callbutton
+    SET buttonlight TO OFF
+END SEQUENCE
+
+
+
+SEQUENCE elevatorUp USING elevatorfloor AND floor 'THIS SEQUENCE MAKES THE ELEVATOR GO UP'
+   FOR EACH elevator in elevators
+       IF floor < elevatorfloor
+           INCREMENT elevatorfloor by 1
+           REPEAT-UNTIL floor = elevatorfloor
+       END IF
+   END FOR
+END SEQUENCE
+
+SEQUENCE elevatorDown USING elevatorfloor AND floor 'THIS SEQUENCE MAKES THE ELEVATOR GO DOWN'
+   FOR EACH elevator in elevators
+       IF floor < elevatorfloor
+           DECREMENT elevatorfloor by 1
+           REPEAT-UNTIL floor = elevatorfloor
+       END IF
+   END FOR
+END SEQUENCE
+
+
+SEQUENCE showdisplaycage USING requestfloor  
+    FOR EACH elevator in columns
+        SHOW requestfloor on screen UNTIL elevatorfloor = requestfloor THEN
+        SHOW NOTHING
+    END FOR
+
+END SEQUENCE
+
+
+
+SEQUENCE showdisplayRC USING requestfloor      
+    FOR EACH elevator in columns
+        IF requestfloor IS pressed THEN
+            SHOW requestfloor number SET timer 2 seconds on screen THEN
+            SHOW elevator name SET timer 3 seconds on screen THEN
+            SHOW NOTHING
+        END IF
+    END FOR
+
+END SEQUENCE
+
+
+
+SEQUENCE returnorigin                 'THIS SEQUENCE SETS THE ELEVATORS GO TO THEIR ORIGIN POINT'
+  SET origin to RC
+  CALL elevatorDown UNTIL elevatorfloor = origin THEN
+  CALL idlestatus
+END SEQUENCE
+
+
+
+SEQUENCE movingstatus
+  SET elevator to moving
+END SEQUENCE
+
+SEQUENCE idlestatus
+  SET elevator to idle
+END SEQUENCE
+
+SEQUENCE stoppedstatus
+  SET elevator to stopped
+END SEQUENCE
+
+
+
+SEQUENCE overweight USING weightsensor AND columns 'THIS SEQUENCE ALERTS THE ELEVATOR IF THE ELEVATOR IS OVERWEIGHTED'
+  FOR EACH elevator in columns
+    SET maximumweight TO 3500 lbs THEN
+    READ weightsensor THEN
+      IF weightsensor value >= 3500 lbs THEN
+        SET heavylight TO ON THEN
+        CALL openclosedoors
+      ELSE IF weightsensor value < 3500 lbs
+        SET heavylight TO OFF
+      END IF
+  END FOR
+END SEQUENCE
