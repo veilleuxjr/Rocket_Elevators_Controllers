@@ -169,11 +169,11 @@ function initcontroller(numberOffloors, numberOfelevators) {
     controller = InitController(10, 2);
     controller.column.elevator_list[0].Floor = 10
     controller.column.elevator_list[1].Floor = 3
-    var elevator = controller.RequestElevator(4, "UP");
-    controller.RequestFloor(elevator,6);
-    var elevator = controller.RequestElevator(2, "UP");
-    controller.RequestFloor(elevator,5);
-    var elevator = controller.RequestElevator(9, "DOWN");
-    controller.RequestFloor(elevator,2);
+    var elevator = controller.requestelevator(4, "UP");
+    controller.requestfloor(elevator,6);
+    var elevator = controller.requestelevator(2, "UP");
+    controller.requestfloor(elevator,5);
+    var elevator = controller.requestelevator(9, "DOWN");
+    controller.requestfloor(elevator,2);
     console.log('----------------TEST 1 DONE')
 }

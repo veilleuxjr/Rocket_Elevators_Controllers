@@ -5,44 +5,43 @@ class Column:
         self.numbersfloors = numbersfloors
         self.numberselevator = numberselevator
         self.elevatorlist= []
+        self.requestelevator
         
         i=0                                                                       
         while i < self.numberselevator:
             self.elevatorlist.append(elevator(i, "IDLE", 1, None, "CLOSED"))     
         i+=1
 
-class internalbutton:
-   def __init__(self, floor):
-     self.floor = floor
-     self.light = "OFF" is False
+ 
 
-class elevator:
-    def __init__(self, elevatornumber, status, floor, direction, elevatordoor):
-        self.elevatornumber = elevatornumber
-        self.status = status
-        self.floor = floor
-        self.direction = direction
-        self.elevatordoor = elevatordoor
-        self.maxweight = 1600        
+    class elevator:
+        def __init__(self, elevatornumber, status, floor, direction, elevatordoor, organizedfloorlist):
+            self.elevatornumber = elevatornumber
+            self.status = status
+            self.floor = floor
+            self.direction = direction
+            self.elevatordoor = elevatordoor
+            self.maxweight = 1600 
+            self.organizedfloorlist = organizedfloorlist       
 
 
-def requestelevator (self, floornumber, direction):
-    print("resquestelevator, floornumber, direction")
-    elevator = self.findbestelevator(floornumber, direction)
-    elevator.sendrequest(floornumber)
-    return elevator
+    def requestelevator (self, floornumber, direction):
+        print("resquestelevator, floornumber, direction")
+        elevator = self.findbestelevator(floornumber, direction)
+        elevator.sendrequest(floornumber)
+        return elevator
 
-def requestfloor (self, elevator, requestedfloor):
-    elevator.sendrequest(requestedfloor)
+        def requestfloor (self, elevator, requestedfloor):
+            elevator.sendrequest(requestedfloor)
 
-def organizefloorlist (self, floorlist, direction):
-    print("entered floorlist in elevator")
-    if self.direction =="UP":
-        self.floorlist.sort() 
-    elif self.direction =="DOWN":
-        self.floorlist.sort().reverse()
-    organizedfloorlist = self.floorlist
-    return organizedfloorlist
+        def organizefloorlist (self, floorlist, direction):
+             print("entered floorlist in elevator")
+            if self.direction =="UP":
+                self.floorlist.sort() 
+            elif self.direction =="DOWN":
+                self.floorlist.sort().reverse()
+                organizedfloorlist = self.floorlist
+             return organizedfloorlist
 
 
 def controlelevator(self, requestedelevator, requestedfloor):
@@ -122,7 +121,7 @@ def restmode(self):
         self.intialpoint
 
 
-def test():
+
 #     USER FLOOR 1 and ELEVATOR FLOOR 1 and IDLE, EXPECTED : OPEN DOOR and CLOSE DOOR
 #     print('----------------USER FLOOR 1 and ELEVATOR FLOOR 1 and IDLE, EXPECTED : OPEN DOOR and CLOSE DOOR')
 #     column = InitColumn(10, 2)
@@ -130,14 +129,14 @@ def test():
 #     column.RequestFloor(Column.column.elevator_list[0],8)
 #     print('----------------TEST 1 DONE')
 
-    print('-------USER1 FLOOR 1 GOING FLOOR 6, USER2 FLOOR 3 GOING FLOOR 5, USER3 FLOOR 9 GOING FLOOR 2 and ELEVATOR[0]=FLOOR 10 ELEVATOR[1]=FLOOR 3')
-    column =column(10, 2)
-    column.column.elevator_list[0].Floor = 10
-    column.column.elevator_list[1].Floor = 3
-    elevator = column.RequestElevator(2, "UP")
+    #print('-------USER1 FLOOR 1 GOING FLOOR 6, USER2 FLOOR 3 GOING FLOOR 5, USER3 FLOOR 9 GOING FLOOR 2 and ELEVATOR[0]=FLOOR 10 ELEVATOR[1]=FLOOR 3')
+    column = Column(10, 2)
+    column.elevator_list[0].floor = 10
+    column.column.elevator_list[1].floor = 3
+    elevator = column.RequestElevator(1, "UP")
     column.RequestFloor(elevator,6)
     elevator = column.RequestElevator(4, "UP")
     column.RequestFloor(elevator,5)
     elevator = column.RequestElevator(9, "DOWN")
     column.RequestFloor(elevator,2)
-    print('----------------TEST 2 DONE')
+    #print('----------------TEST 2 DONE')
